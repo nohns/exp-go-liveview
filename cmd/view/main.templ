@@ -1,0 +1,56 @@
+package view
+
+import "github.com/nohns/go-liveview"
+import "github.com/nohns/go-liveview/internal/rng"
+import "strconv"
+import "time"
+import "fmt"
+
+type main struct {
+	id  string
+	ses *glive.Session
+	t   *time.Ticker
+
+	count int
+	user  string
+}
+
+func Main(user string) glive.ViewBuilder {
+	return glive.ViewBuilder(func() glive.View {
+		id, _ := rng.ViewID()
+		return &main{id: id, user: user}
+	})
+}
+
+func (v *main) OnMount(ses *glive.Session) {
+	v.ses = ses
+
+	v.t = time.NewTicker(1 * time.Second)
+	go func() {
+		for range v.t.C {
+			v.count++
+			fmt.Printf("count now %d\n", v.count)
+			ses.Rerender(v)
+		}
+	}()
+}
+
+func (v *main) OnUnmount() {
+	v.t.Stop()
+}
+
+func (v *main) ID() string {
+	return v.id
+}
+
+func (v *main) RootAttr() templ.Attributes {
+	return map[string]any{
+		"data-glive-view": v.id,
+	}
+}
+
+templ (v *main) Render() {
+	<main { v.RootAttr()... }>
+		Hello { v.user } count is now { strconv.Itoa(v.count) }!
+	</main>
+}
