@@ -1,3 +1,5 @@
+import morphdom from "./morphdom/morphdom.esm.js";
+
 let ws;
 let viewMap = new Map();
 window.addEventListener("DOMContentLoaded", () => {
@@ -18,28 +20,38 @@ window.addEventListener("DOMContentLoaded", () => {
 
   ws.onmessage = function (ev) {
     const msg = JSON.parse(ev.data);
-    const viewElement = document.querySelector(
-      `[data-glive-view=${msg.data.vid}]`,
-    );
-    switch (msg.type) {
-      case "hydration":
-        console.log(zip(msg.data.h));
-        viewMap.set(msg.data.vid, msg.data.h);
+    const viewElement = document.querySelector(`[data-glive-view=${msg.vid}]`);
+    const { s, ...values } = msg.data;
+    const html = zip(s, values);
 
-        viewElement.outerHTML = zip(msg.data.h);
-        break;
-      case "diff":
-        console.log("updated values", msg.data.v);
-        viewElement.outerHTML = zip([viewMap.get(msg.data.vid)[0], msg.data.v]);
-        break;
-    }
+    morphdom(viewElement, html);
   };
 });
 
-function zip(data) {
+function zip(segments, values) {
+  if (segments.length === 1) {
+    return segments[0];
+  }
+
   let res = "";
-  for (let i = 0; i < data[0].length * 2 - 1; i++) {
-    res += data[i % 2][parseInt(i / 2)];
+  const valuesExpected = segments.length - 1;
+  for (let i = 0; i < Object.keys(values).length; i++) {
+    const segmentIndex = i % valuesExpected; // SegmentIndex of segment preceeding value
+    if (segmentIndex == 0) {
+      res += segments[0];
+    }
+
+    // Add value to result. Zip if value itself is a nested object
+    let v = values[i];
+    if (v) {
+      if (typeof v === "object") {
+        const { s: subSegments, ...subValues } = v;
+        v = zip(subSegments, subValues);
+      }
+      res += v;
+    }
+    // Add value postfix
+    res += segments[segmentIndex + 1];
   }
   return res;
 }

@@ -11,14 +11,21 @@ import "io"
 
 import "github.com/nohns/go-liveview"
 import "github.com/nohns/go-liveview/internal/rng"
-import "strconv"
 import "time"
 import "fmt"
 
+type dataItem struct {
+	Title       string
+	Description string
+	Status      string
+}
+
 type main struct {
-	id  string
-	ses *glive.Session
-	t   *time.Ticker
+	id       string
+	ses      *glive.Session
+	t        *time.Ticker
+	rootattr templ.Attributes
+	data     []dataItem
 
 	count int
 	user  string
@@ -27,7 +34,18 @@ type main struct {
 func Main(user string) glive.ViewBuilder {
 	return glive.ViewBuilder(func() glive.View {
 		id, _ := rng.ViewID()
-		return &main{id: id, user: user}
+		return &main{
+			id:   id,
+			user: user,
+			rootattr: templ.Attributes{
+				"data-glive-view": id,
+			},
+			data: []dataItem{
+				dataItem{Title: "Martin Vad", Description: "Person who is very bad at programming.", Status: "Active"},
+				dataItem{Title: "Rune Gram Sand", Description: "Suspected terrorist. Last seen coding C#.", Status: "Missing"},
+				dataItem{Title: "Sofie Schou", Description: "Harmless yet writes pure css when tailwind is available.", Status: "Useless"},
+			},
+		}
 	})
 }
 
@@ -39,6 +57,12 @@ func (v *main) OnMount(ses *glive.Session) {
 		for range v.t.C {
 			v.count++
 			fmt.Printf("count now %d\n", v.count)
+			if v.count == 4 {
+				v.data[1].Status = "Terroising"
+			}
+			if v.count == 6 {
+				v.data[2].Status = "Late"
+			}
 			ses.Rerender(v)
 		}
 	}()
@@ -50,12 +74,6 @@ func (v *main) OnUnmount() {
 
 func (v *main) ID() string {
 	return v.id
-}
-
-func (v *main) RootAttr() templ.Attributes {
-	return map[string]any{
-		"data-glive-view": v.id,
-	}
 }
 
 func (v *main) Render() templ.Component {
@@ -75,37 +93,88 @@ func (v *main) Render() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, v.RootAttr())
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, v.rootattr)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(">Hello ")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("><div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(v.user)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `cmd/view/main.templ`, Line: 54, Col: 16}
+		{
+			templ_7745c5c3_indnt_3_Buffer := templ_7745c5c3_Buffer
+			templ_7745c5c3_Buffer = &templ.DiffBuffer{Delegate: true}
+			for _, v := range v.data {
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div><h3>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var2 string
+				templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(v.Title)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `cmd/view/main.templ`, Line: 75, Col: 18}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteDynamic(templ.EscapeString(templ_7745c5c3_Var2))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" <small style=\"margin-left: 5px;\">Status: ")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var3 string
+				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(v.Status)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `cmd/view/main.templ`, Line: 75, Col: 72}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteDynamic(templ.EscapeString(templ_7745c5c3_Var3))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</small></h3><p>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var4 string
+				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(v.Description)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `cmd/view/main.templ`, Line: 76, Col: 23}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteDynamic(templ.EscapeString(templ_7745c5c3_Var4))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				{
+					templ_7745c5c3_indnt_5_Buffer := templ_7745c5c3_Buffer
+					templ_7745c5c3_Buffer = &templ.DiffBuffer{Delegate: true}
+					templ_7745c5c3_Buffer.StartIf(1)
+					if v.Status == "Late" {
+						templ_7745c5c3_indnt_6_Buffer := templ_7745c5c3_Buffer
+						templ_7745c5c3_Buffer = &templ.DiffBuffer{Delegate: true}
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<p style=\"color: darkgray\">Late reason: Sleep</p>")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						templ_7745c5c3_indnt_6_Buffer.WriteBranch(0, templ_7745c5c3_Buffer)
+						templ_7745c5c3_Buffer = templ_7745c5c3_indnt_6_Buffer
+					}
+					templ_7745c5c3_indnt_5_Buffer.WriteNested(templ_7745c5c3_Buffer)
+					templ_7745c5c3_Buffer = templ_7745c5c3_indnt_5_Buffer
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Buffer.CompleteSegs()
+			}
+			templ_7745c5c3_indnt_3_Buffer.WriteNested(templ_7745c5c3_Buffer)
+			templ_7745c5c3_Buffer = templ_7745c5c3_indnt_3_Buffer
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteDynamic(templ.EscapeString(templ_7745c5c3_Var2))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" count is now ")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(v.count))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `cmd/view/main.templ`, Line: 54, Col: 55}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteDynamic(templ.EscapeString(templ_7745c5c3_Var3))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("!</main>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></main>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

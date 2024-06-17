@@ -48,8 +48,8 @@ func hydrateView(sock *websocket.Conn, v View) error {
 		return fmt.Errorf("hydration render: %v", err)
 	}
 	b.Flush()
-
-	if err := sock.WriteJSON(map[string]any{"type": "hydration", "data": hydration{ViewID: v.ID(), Diff: [][]string{b.Segs, b.Vals}}}); err != nil {
+	out := map[string]any{"vid": v.ID(), "data": &b}
+	if err := sock.WriteJSON(out); err != nil {
 		return fmt.Errorf("write hydration json: %v", err)
 	}
 	return nil
@@ -61,12 +61,13 @@ type diff struct {
 }
 
 func diffView(sock *websocket.Conn, v View) error {
-	var b templ.DiffBuffer
+	b := templ.DiffBuffer{Delegate: false}
 	if err := v.Render().Render(context.TODO(), &b); err != nil {
 		return fmt.Errorf("diff render: %v", err)
 	}
-
-	if err := sock.WriteJSON(map[string]any{"type": "diff", "data": diff{ViewID: v.ID(), Vals: b.Vals}}); err != nil {
+	b.Flush()
+	out := map[string]any{"vid": v.ID(), "data": &b}
+	if err := sock.WriteJSON(out); err != nil {
 		return fmt.Errorf("write diff json: %v", err)
 	}
 	return nil

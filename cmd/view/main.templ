@@ -2,14 +2,21 @@ package view
 
 import "github.com/nohns/go-liveview"
 import "github.com/nohns/go-liveview/internal/rng"
-import "strconv"
 import "time"
 import "fmt"
 
+type dataItem struct {
+	Title       string
+	Description string
+	Status      string
+}
+
 type main struct {
-	id  string
-	ses *glive.Session
-	t   *time.Ticker
+	id       string
+	ses      *glive.Session
+	t        *time.Ticker
+	rootattr templ.Attributes
+	data     []dataItem
 
 	count int
 	user  string
@@ -18,7 +25,18 @@ type main struct {
 func Main(user string) glive.ViewBuilder {
 	return glive.ViewBuilder(func() glive.View {
 		id, _ := rng.ViewID()
-		return &main{id: id, user: user}
+		return &main{
+			id:   id,
+			user: user,
+			rootattr: templ.Attributes{
+				"data-glive-view": id,
+			},
+			data: []dataItem{
+				dataItem{Title: "Martin Vad", Description: "Person who is very bad at programming.", Status: "Active"},
+				dataItem{Title: "Rune Gram Sand", Description: "Suspected terrorist. Last seen coding C#.", Status: "Missing"},
+				dataItem{Title: "Sofie Schou", Description: "Harmless yet writes pure css when tailwind is available.", Status: "Useless"},
+			},
+		}
 	})
 }
 
@@ -30,6 +48,12 @@ func (v *main) OnMount(ses *glive.Session) {
 		for range v.t.C {
 			v.count++
 			fmt.Printf("count now %d\n", v.count)
+			if v.count == 4 {
+				v.data[1].Status = "Terroising"
+			}
+			if v.count == 6 {
+				v.data[2].Status = "Late"
+			}
 			ses.Rerender(v)
 		}
 	}()
@@ -43,14 +67,18 @@ func (v *main) ID() string {
 	return v.id
 }
 
-func (v *main) RootAttr() templ.Attributes {
-	return map[string]any{
-		"data-glive-view": v.id,
-	}
-}
-
 templ (v *main) Render() {
-	<main { v.RootAttr()... }>
-		Hello { v.user } count is now { strconv.Itoa(v.count) }!
+	<main { v.rootattr... }>
+		<div>
+			for _, v := range v.data {
+				<div>
+					<h3>{ v.Title } <small style="margin-left: 5px;">Status: { v.Status }</small></h3>
+					<p>{ v.Description }</p>
+					if v.Status == "Late" {
+						<p style="color: darkgray">Late reason: Sleep</p>
+					}
+				</div>
+			}
+		</div>
 	</main>
 }

@@ -25,7 +25,7 @@ templ HomePage(ses *glive.Session) {
 				</nav>
 			</aside>
 			@ses.Mount("main", Main("Asger"))
-			<script type="text/javascript" src={ fmt.Sprintf("/assets/js/ws.js?timestamp=%d", time.Now().UnixMicro()) }></script>
+			<script type="module" src={ fmt.Sprintf("/assets/js/ws.js?timestamp=%d", time.Now().UnixMicro()) }></script>
 		</body>
 	</html>
 }
